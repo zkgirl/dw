@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dream Globe — India Tour (Map → 360)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+    
+    :root{
+      --bg:#0a0118;
+      --card:rgba(15,5,30,0.6);
+      --muted:#c8b5e8;
+      --accent:#ff6b9d;
+      --accent2:#a78bfa;
+      --glow:#9d4edd;
+    }
+    
+    @keyframes floatStars{
+      0%,100%{transform:translateY(0) rotate(0deg);opacity:0.6}
+      50%{transform:translateY(-20px) rotate(180deg);opacity:1}
+    }
+    
+    @keyframes gradientShift{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+    
+    @keyframes twinkle{
+      0%,100%{opacity:0.3;transform:scale(1)}
+      50%{opacity:1;transform:scale(1.2)}
+    }
+    
+    @keyframes dreamGlow{
+      0%,100%{box-shadow:0 0 20px rgba(157,78,221,0.3),0 0 40px rgba(167,139,250,0.2),inset 0 0 60px rgba(255,107,157,0.1)}
+      50%{box-shadow:0 0 30px rgba(157,78,221,0.5),0 0 60px rgba(167,139,250,0.3),inset 0 0 80px rgba(255,107,157,0.15)}
+    }
+    
+    body{
+      margin:0;
+      font-family:'Poppins',sans-serif;
+      background:linear-gradient(135deg, #0a0118 0%, #1a0b2e 25%, #2d1b4e 50%, #1a0b2e 75%, #0a0118 100%);
+      background-size:400% 400%;
+      animation:gradientShift 15s ease infinite;
+      color:#f0e7ff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      padding:20px;
+      position:relative;
+      overflow:hidden;
+    }
+    
+    body::before{
+      content:'';
+      position:absolute;
+      width:300%;
+      height:300%;
+      top:-100%;
+      left:-100%;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, white, transparent),
+        radial-gradient(2px 2px at 60% 70%, rgba(167,139,250,0.8), transparent),
+        radial-gradient(1px 1px at 50% 50%, rgba(255,107,157,0.6), transparent),
+        radial-gradient(1px 1px at 80% 10%, white, transparent),
+        radial-gradient(2px 2px at 90% 60%, rgba(200,181,232,0.7), transparent);
+      background-size:200px 200px, 300px 300px, 250px 250px, 180px 180px, 220px 220px;
+      animation:floatStars 20s linear infinite;
+      pointer-events:none;
+    }
+    
+    .wrap{
+      width:95%;
+      max-width:1300px;
+      background:var(--card);
+      backdrop-filter:blur(20px);
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,0.7),0 0 80px rgba(157,78,221,0.3);
+      border:1px solid rgba(200,181,232,0.2);
+      animation:dreamGlow 4s ease-in-out infinite;
+      position:relative;
+      z-index:1;
+    }
+    
+    .wrap::before{
+      content:'';
+      position:absolute;
+      inset:-2px;
+      background:linear-gradient(45deg, var(--accent), var(--accent2), var(--glow), var(--accent));
+      background-size:300% 300%;
+      animation:gradientShift 8s ease infinite;
+      border-radius:24px;
+      z-index:-1;
+      opacity:0.3;
+      filter:blur(10px);
+    }
+    
+    .row{display:flex;gap:0}
+    .left{width:44%;min-width:320px;position:relative}
+    .right{flex:1;min-width:360px;position:relative}
+    #map{height:640px;position:relative}
+    
+    #pano{
+      height:640px;
+      background:radial-gradient(circle at center, #1a0b2e, #000);
+      position:relative;
+      transition:opacity 0.6s ease, transform 0.6s ease;
+      transform-origin:center;
+    }
+    #pano.fade{opacity:0.2;transform:scale(0.98)}
+    
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:16px 24px;
+      background:linear-gradient(180deg, rgba(255,107,157,0.08), transparent);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(200,181,232,0.15);
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    
+    .title{
+      font-family:'Playfair Display',serif;
+      font-weight:700;
+      font-size:24px;
+      background:linear-gradient(135deg, #ff6b9d, #a78bfa, #c8b5e8);
+      -webkit-background-clip:text;
+      background-clip:text;
+      -webkit-text-fill-color:transparent;
+      text-shadow:0 0 30px rgba(255,107,157,0.5);
+      letter-spacing:1px;
+    }
+    
+    .meta{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:300;
+      text-shadow:0 0 10px rgba(200,181,232,0.3);
+    }
+    
+    .controls{
+      position:absolute;
+      top:50%;
+      width:100%;
+      transform:translateY(-50%);
+      pointer-events:none;
+      display:flex;
+      justify-content:space-between;
+      z-index:10;
+    }
+    
+    button.arrow{
+      pointer-events:auto;
+      border:0;
+      background:rgba(255,107,157,0.25);
+      backdrop-filter:blur(12px);
+      color:#fff;
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      cursor:pointer;
+      font-size:32px;
+      margin:0 16px;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:0 4px 20px rgba(157,78,221,0.4),inset 0 0 20px rgba(255,107,157,0.2);
+      border:2px solid rgba(200,181,232,0.3);
+      position:relative;
+    }
+    
+    button.arrow::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      background:linear-gradient(135deg, rgba(255,107,157,0.3), rgba(167,139,250,0.3));
+      opacity:0;
+      transition:opacity 0.3s;
+    }
+    
+    button.arrow:hover{
+      background:rgba(255,107,157,0.4);
+      transform:scale(1.15);
+      box-shadow:0 6px 30px rgba(157,78,221,0.6),0 0 40px rgba(255,107,157,0.4);
+    }
+    
+    button.arrow:hover::before{opacity:1}
+    button.arrow:active{transform:scale(0.95)}
+    
+    #spinner{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      display:none;
+      padding:16px 28px;
+      border-radius:16px;
+      background:rgba(15,5,30,0.9);
+      backdrop-filter:blur(20px);
+      font-weight:600;
+      z-index:15;
+      box-shadow:0 0 40px rgba(157,78,221,0.6),inset 0 0 20px rgba(255,107,157,0.2);
+      border:1px solid rgba(200,181,232,0.3);
+      animation:pulse 1.5s infinite,twinkle 2s infinite;
+    }
+    
+    @keyframes pulse{0%,100%{opacity:1} 50%{opacity:0.7}}
+    
+    .list{
+      padding:12px 16px;
+      background:rgba(4,20,34,0.4);
+      backdrop-filter:blur(10px);
+      font-size:14px;
+      max-height:200px;
+      overflow-y:auto;
+      border-top:1px solid rgba(200,181,232,0.1);
+    }
+    
+    .list::-webkit-scrollbar{width:6px}
+    .list::-webkit-scrollbar-track{background:rgba(200,181,232,0.05)}
+    .list::-webkit-scrollbar-thumb{background:linear-gradient(180deg, var(--accent), var(--accent2));border-radius:10px}
+    
+    .loc{
+      cursor:pointer;
+      padding:12px 14px;
+      border-radius:12px;
+      margin:8px 0;
+      background:rgba(255,255,255,0.02);
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+      border-left:3px solid transparent;
+      backdrop-filter:blur(5px);
+      font-weight:300;
+    }
+    
+    .loc:hover{
+      background:rgba(255,107,157,0.15);
+      border-left-color:var(--accent);
+      transform:translateX(8px);
+      box-shadow:0 4px 20px rgba(157,78,221,0.3);
+    }
+    
+    .active{
+      background:linear-gradient(90deg, rgba(255,107,157,0.25), rgba(167,139,250,0.15));
+      border-left-color:var(--accent);
+      font-weight:600;
+      box-shadow:0 4px 20px rgba(157,78,221,0.4),inset 0 0 20px rgba(255,107,157,0.1);
+      transform:translateX(8px);
+    }
+    
+    .caption{
+      padding:14px 20px;
+      background:rgba(3,18,26,0.6);
+      backdrop-filter:blur(15px);
+      color:var(--muted);
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border-top:1px solid rgba(200,181,232,0.1);
+      font-weight:300;
+    }
+    
+    .status-dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:var(--accent);
+      animation:twinkle 2s infinite;
+      box-shadow:0 0 10px var(--accent);
+    }
+    
+    .info-badge{
+      display:inline-block;
+      padding:4px 12px;
+      background:linear-gradient(135deg, rgba(255,107,157,0.3), rgba(167,139,250,0.2));
+      border-radius:20px;
+      font-size:11px;
+      margin-left:10px;
+      color:#fff;
+      border:1px solid rgba(200,181,232,0.3);
+      font-weight:600;
+      letter-spacing:0.5px;
+      text-transform:uppercase;
+      box-shadow:0 0 20px rgba(157,78,221,0.4);
+    }
+    
+    @media (max-width:900px){
+      .row{flex-direction:column}
+      .left,.right{width:100%}
+      #map,#pano{height:420px}
+      .topbar{flex-direction:column;align-items:flex-start}
+      .title{font-size:20px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" role="application">
+    <div class="topbar">
+      <div class="title">✨ Dream Globe — India Tour <span class="info-badge">Fixed</span></div>
+      <div class="meta">🌙 Click markers or use arrow keys to navigate • Float through mystical India</div>
+    </div>
+
+    <div class="row">
+      <div class="left">
+        <div id="map"></div>
+        <div class="list" id="list">
+          <!-- generated list -->
+        </div>
+      </div>
+
+      <div class="right">
+        <div id="pano" aria-label="Panorama container">
+          <div class="controls">
+            <button id="prev" class="arrow" aria-label="previous" title="Previous location (←)">‹</button>
+            <button id="next" class="arrow" aria-label="next" title="Next location (→)">›</button>
+          </div>
+          <div id="spinner">Loading panorama…</div>
+        </div>
+        <div class="caption" id="caption">
+          <span class="status-dot"></span>
+          <span>Click a marker or list item to open its 360° view</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // =========================
+  // Config: Replace API key
+  // =========================
+  const API_KEY = 'AIzaSyDtdd2XggGq98iFhgGr7m4eIASLjT1kBKE'; // <<< REPLACE THIS WITH YOUR GOOGLE MAPS API KEY
+
+  // =========================
+  // Destinations - pano IDs will be found dynamically
+  // =========================
+  const DESTS = [
+    { id: 'redfort', name: 'Red Fort (Delhi)', lat: 28.656159, lng: 77.241020 },
+    { id: 'qutub', name: 'Qutub Minar (Delhi)', lat: 28.524428, lng: 77.185455 },
+    { id: 'taj', name: 'Taj Mahal (Agra)', lat: 27.173891, lng: 78.042068 },
+    { id: 'hawa', name: 'Hawa Mahal (Jaipur)', lat: 26.9239, lng: 75.8267 },
+    { id: 'gateway', name: 'Gateway of India (Mumbai)', lat: 18.921984, lng: 72.834654 }
+  ];
+
+  // Globals
+  let map, panorama, svService;
+  let markers = {};
+  let idx = 0;
+  let isTransitioning = false;
+
+  // UI refs
+  const spinnerEl = () => document.getElementById('spinner');
+  const captionEl = () => document.getElementById('caption');
+  const listEl = () => document.getElementById('list');
+  const panoEl = () => document.getElementById('pano');
+
+  // Append Maps script with callback
+  (function loadMaps() {
+    if (window.google && window.google.maps) return initApp();
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initApp`;
+    s.async = true; s.defer = true;
+    s.onerror = () => {
+      captionEl().innerHTML = '<span class="status-dot" style="background:#f44"></span><span>Error loading Maps JS. Check API key, billing, and console.</span>';
+      console.error('Failed to load Maps JS');
+    };
+    document.head.appendChild(s);
+  })();
+
+  // Called by Maps script
+  function initApp() {
+    console.log('[IndiaTour] Maps JS loaded successfully');
+    svService = new google.maps.StreetViewService();
+
+    // Create a map centered on India with dreamy custom styling
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 22.0, lng: 78.0 },
+      zoom: 5,
+      mapTypeControl: false,
+      streetViewControl: false,
+      styles: [
+        { featureType: 'all', elementType: 'geometry', stylers: [{ color: '#1a0b2e' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0d0820' }] },
+        { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#a78bfa' }] },
+        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2d1b4e' }] },
+        { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#c8b5e8' }] },
+        { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#2a1548' }] },
+        { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#3d2561' }] },
+        { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#ff6b9d' }] }
+      ]
+    });
+
+    // Create panorama container with better default settings
+    panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), {
+      visible: false,
+      pov: { heading: 0, pitch: 0 },
+      addressControl: false,
+      fullscreenControl: true,
+      motionTracking: false,
+      linksControl: true,
+      panControl: false,
+      zoomControl: true
+    });
+
+    // Populate markers and list
+    DESTS.forEach((d, i) => {
+      const m = new google.maps.Marker({
+        position: { lat: d.lat, lng: d.lng },
+        map,
+        title: d.name,
+        animation: google.maps.Animation.DROP,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#ff6b9d',
+          fillOpacity: 1,
+          strokeColor: '#a78bfa',
+          strokeWeight: 3
+        }
+      });
+      markers[d.id] = m;
+      m.addListener('click', () => { onSelect(i); });
+
+      // Bounce animation on hover
+      m.addListener('mouseover', () => { 
+        m.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(() => m.setAnimation(null), 700);
+      });
+
+      // List item with dreamy icon
+      const item = document.createElement('div');
+      item.className = 'loc';
+      item.id = 'loc-' + d.id;
+      item.innerHTML = `✨ ${d.name}`;
+      item.addEventListener('click', () => onSelect(i));
+      listEl().appendChild(item);
+    });
+
+    // Next / prev handlers
+    document.getElementById('next').addEventListener('click', () => changeIndex(1));
+    document.getElementById('prev').addEventListener('click', () => changeIndex(-1));
+    window.addEventListener('keydown', (e) => { 
+      if (e.key === 'ArrowRight') changeIndex(1); 
+      if (e.key === 'ArrowLeft') changeIndex(-1); 
+    });
+
+    captionEl().innerHTML = '<span class="status-dot"></span><span>🌟 Ready! Click any location to begin your mystical journey through India</span>';
+    console.log('[IndiaTour] UI initialized with', DESTS.length, 'destinations');
+  }
+
+  // Next / prev wrapper with transition
+  function changeIndex(delta) {
+    if (isTransitioning) return;
+    idx = (idx + delta + DESTS.length) % DESTS.length;
+    onSelect(idx);
+  }
+
+  // FIXED: Robust onSelect with dynamic pano ID discovery
+  async function onSelect(i) {
+    if (isTransitioning) return;
+    isTransitioning = true;
+    
+    idx = i;
+    const d = DESTS[i];
+    highlightList(d.id);
+    
+    // Fade out current panorama
+    panoEl().classList.add('fade');
+    
+    map.panTo({lat: d.lat, lng: d.lng});
+    map.setZoom(16);
+    captionEl().innerHTML = `<span class="status-dot"></span><span>✨ Loading ${d.name}…</span>`;
+    showSpinner();
+
+    // Helper to show fallback and finish
+    function finishWithFallback() {
+      panorama.setVisible(false);
+      panoEl().classList.remove('fade');
+      hideSpinner();
+      captionEl().innerHTML = `<span class="status-dot" style="background:#f59e0b"></span><span>🌌 Street View not available for ${d.name}</span>`;
+      showFallback(d);
+      isTransitioning = false;
+    }
+
+    // If we have a cached pano ID, try it first
+    if (d.pano) {
+      console.log('[IndiaTour] Trying cached pano for', d.name, d.pano);
+      svService.getPanorama({ pano: d.pano }, async (meta, status) => {
+        if (status === 'OK' && meta && meta.location && meta.location.pano) {
+          // Cached pano is valid
+          await new Promise(r => setTimeout(r, 300));
+          panorama.setPano(meta.location.pano);
+          panorama.setPov({ heading: 0, pitch: 0 });
+          panorama.setVisible(true);
+          panoEl().classList.remove('fade');
+          captionEl().innerHTML = `<span class="status-dot" style="background:#4ade80"></span><span>🎯 Now viewing: ${d.name}</span>`;
+          hideSpinner();
+          DESTS[i].pano = meta.location.pano;
+          prefetch((i+1)%DESTS.length);
+          isTransitioning = false;
+          return;
+        } else {
+          // Cached pano expired, fall through to location search
+          console.warn('[IndiaTour] Cached pano invalid, searching by location for', d.name);
+        }
+        
+        // Search by location as fallback
+        searchAndSetPano(i, d, finishWithFallback);
+      });
+      return;
+    }
+
+    // No cached pano, search by location
+    searchAndSetPano(i, d, finishWithFallback);
+  }
+
+  // Helper function to search for pano by location
+  function searchAndSetPano(i, d, fallbackFn) {
+    svService.getPanorama({ location: { lat: d.lat, lng: d.lng }, radius: 300 }, (data, status) => {
+      if (status === 'OK' && data && data.location && data.location.pano) {
+        console.log('[IndiaTour] Found pano by location for', d.name, '→', data.location.pano);
+        DESTS[i].pano = data.location.pano; // Cache it
+        
+        setTimeout(() => { 
+          panorama.setPano(data.location.pano);
+          panorama.setPov({ heading: 0, pitch: 0 });
+          panorama.setVisible(true);
+          panoEl().classList.remove('fade');
+          captionEl().innerHTML = `<span class="status-dot" style="background:#4ade80"></span><span>🎯 Now viewing: ${d.name}</span>`;
+          hideSpinner();
+          prefetch((i+1)%DESTS.length);
+          isTransitioning = false;
+        }, 300);
+      } else {
+        console.warn('[IndiaTour] No pano found for', d.name, 'status:', status);
+        fallbackFn();
+      }
+    });
+  }
+
+  // Prefetch pano id for next location (reduces load time)
+  function prefetch(i) {
+    const d = DESTS[i];
+    if (d.pano) {
+      console.log('[IndiaTour] Next location already cached:', d.name);
+      return;
+    }
+    svService.getPanorama({ location: { lat: d.lat, lng: d.lng }, radius: 300 }, (data, status) => {
+      if (status === 'OK' && data && data.location && data.location.pano) {
+        DESTS[i].pano = data.location.pano;
+        console.log('[IndiaTour] Prefetched for', d.name, '→', data.location.pano);
+      }
+    });
+  }
+
+  // Visual helper: spinner visibility
+  function showSpinner() { spinnerEl().style.display = 'block'; }
+  function hideSpinner() { spinnerEl().style.display = 'none'; }
+
+  // Show fallback overlay with better styling
+  function showFallback(d) {
+    const p = document.getElementById('pano');
+    const ex = document.getElementById('fallback');
+    if (ex) ex.remove();
+    
+    const el = document.createElement('div');
+    el.id = 'fallback';
+    el.style.cssText = `
+      position:absolute;left:0;top:0;right:0;bottom:0;z-index:20;
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#1e3a5f,#0a1828);
+      color:#fff;font-size:16px;animation:fadeIn 0.4s ease;
+    `;
+    el.innerHTML = `
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:48px;margin-bottom:16px">🌌</div>
+        <strong style="font-size:18px;background:linear-gradient(135deg, #ff6b9d, #a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Street View Not Available</strong>
+        <div style="margin-top:12px;color:#c8b5e8;font-size:14px">
+          ${d.name}<br/>
+          <small>(${d.lat.toFixed(4)}, ${d.lng.toFixed(4)})</small>
+        </div>
+        <div style="margin-top:16px;font-size:12px;color:#a78bfa">Perhaps this place exists only in dreams...</div>
+      </div>
+    `;
+    p.appendChild(el);
+    
+    setTimeout(() => { 
+      const x = document.getElementById('fallback'); 
+      if (x) {
+        x.style.opacity = '0';
+        x.style.transition = 'opacity 0.4s';
+        setTimeout(() => x.remove(), 400);
+      }
+    }, 4000);
+  }
+
+  // Highlight list item with smooth transition
+  function highlightList(id) {
+    Array.from(listEl().children).forEach(c => c.classList.remove('active'));
+    const el = document.getElementById('loc-' + id);
+    if (el) {
+      el.classList.add('active');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  </script>
+</body>
+</html>
